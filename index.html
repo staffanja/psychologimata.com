@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Psychologimata</title>
+  <meta name="description" content="Minimal landing page with fullscreen menu and scrolling image." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --bg:#dba679;
+      --bg-light:#f2f2f7;
+      --fg:#f2f2f2;
+      --muted:rgba(242,242,242,.72);
+      --muted2:rgba(242,242,242,.5);
+      --line:rgba(242,242,242,.18);
+      --pad:clamp(16px, 2.2vw, 28px);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --brand-font: "Cinzel", serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      padding:0;
+      background:linear-gradient(to bottom, rgb(219, 166, 121) 0%, rgb(242, 242, 247) 100%);
+    }
+    body{
+      background:linear-gradient(to bottom, rgb(219, 166, 121) 0%, rgb(242, 242, 247) 100%);
+      color:var(--fg);
+      font-family:var(--font);
+      letter-spacing:.02em;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow:hidden; /* keep it like a single “panel” */
+    }
+
+    a{color:inherit;text-decoration:none}
+    a:hover{opacity:.78}
+
+    /* Top bar */
+    .topbar{
+      position:fixed;
+      inset:0 0 auto 0;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      padding:var(--pad);
+      z-index:20;
+      pointer-events:none;
+    }
+    .brand{
+      pointer-events:auto;
+      display:inline-flex;
+      align-items:center;
+      line-height:1;
+    }
+    .brand img{
+      display:block;
+      width:clamp(100px, 14vw, 160px);
+      height:auto;
+    }
+
+    .menu-btn{
+      pointer-events:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:transparent;
+      color:var(--fg);
+      font:500 12px/1 var(--mono);
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      cursor:pointer;
+      user-select:none;
+    }
+    .burger{
+      width:16px;height:10px;position:relative;display:inline-block;
+    }
+    .burger span{
+      position:absolute;left:0;right:0;height:1px;background:var(--fg);
+      transform-origin:center;
+      transition:transform .25s ease, top .25s ease, opacity .2s ease;
+    }
+    .burger span:nth-child(1){top:1px}
+    .burger span:nth-child(2){top:5px;opacity:.9}
+    .burger span:nth-child(3){top:9px}
+
+    .menu-btn[aria-expanded="true"] .burger span:nth-child(1){top:5px;transform:rotate(45deg)}
+    .menu-btn[aria-expanded="true"] .burger span:nth-child(2){opacity:0}
+    .menu-btn[aria-expanded="true"] .burger span:nth-child(3){top:5px;transform:rotate(-45deg)}
+
+    /* Main stage */
+    .stage{
+      position:relative;
+      height:100vh;
+      width:100vw;
+      overflow:hidden;
+    }
+
+    /* Scrolling image panel */
+    .image-window{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      isolation:isolate;
+    }
+
+    /*
+      Put a tall image inside.
+      It moves only when the user scrolls.
+    */
+    .image-track{
+      position:absolute;
+      inset:0 0 auto 0;
+      height:160vh;
+      will-change:transform;
+      transform:translate3d(0,-80,0);
+      transition:transform .08s linear;
+      opacity:.62;
+    }
+
+    .image-track img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      filter:contrast(1.02) saturate(.98);
+    }
+
+    /* Dark veil for readability */
+    .veil{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(
+        to bottom,
+        rgba(219,166,121,.22) 0%,
+        rgba(219,166,121,.12) 45%,
+        rgba(242,242,247,.08) 100%
+      );
+      z-index:2;
+      pointer-events:none;
+    }
+
+    /* Center copy */
+    .copy{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      padding:calc(var(--pad) * 2);
+      z-index:3;
+      text-align:center;
+    }
+    .copy-inner{
+      max-width:min(680px, 92vw);
+    }
+    .title{
+      margin:0;
+      font-family:var(--brand-font);
+      color:#fff;
+      text-transform:uppercase;
+      font-weight:500;
+      letter-spacing:.24em;
+      font-size:clamp(22px, 4vw, 44px);
+      line-height:1.05;
+    }
+    .desc{
+      margin:18px auto 0;
+      color:#000;
+      font-size:clamp(18px, 2.2vw, 24px);
+      line-height:1.6;
+      letter-spacing:.06em;
+      max-width:56ch;
+    }
+
+    /* Bottom links */
+    .footer{
+      position:fixed;
+      inset:auto 0 0 0;
+      z-index:20;
+      padding:var(--pad);
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      pointer-events:none;
+    }
+    .footer .left,
+    .footer .right{
+      pointer-events:auto;
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      font:500 12px/1.2 var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted2);
+    }
+
+    .footer .right{
+      justify-content:flex-end;
+      text-align:right;
+    }
+    .email-link{
+      color:#fff;
+      font-size:clamp(13px, 1.6vw, 15px);
+      letter-spacing:.14em;
+      border:1px solid rgba(255,255,255,.38);
+      background:rgba(0,0,0,.28);
+      border-radius:999px;
+      padding:8px 14px;
+    }
+    .email-link:hover{
+      opacity:1;
+      background:rgba(0,0,0,.4);
+      border-color:rgba(255,255,255,.6);
+    }
+    .social-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:24px;
+      height:24px;
+      color:#4a3426;
+    }
+    .social-icon svg{
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    /* Fullscreen menu overlay */
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:50;
+      background:rgba(10,10,10,.96);
+      backdrop-filter:blur(6px);
+      display:grid;
+      place-items:center;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease;
+    }
+    .overlay[data-open="true"]{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .overlay-inner{
+      width:min(900px, 92vw);
+      padding:calc(var(--pad) * 1.5);
+      display:grid;
+      gap:22px;
+    }
+
+    .overlay-nav{
+      display:grid;
+      gap:14px;
+      text-align:center;
+    }
+
+    .overlay-nav a{
+      font-size:clamp(22px, 4vw, 44px);
+      font-weight:400;
+      text-transform:uppercase;
+      letter-spacing:.22em;
+      padding:10px 0;
+    }
+
+    .overlay-meta{
+      margin-top:10px;
+      border-top:1px solid var(--line);
+      padding-top:18px;
+      display:flex;
+      gap:12px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      color:var(--muted2);
+      font:500 12px/1.4 var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .image-track{transition:none}
+      .overlay{transition:none}
+      .burger span{transition:none}
+    }
+
+    /* Small screens */
+    @media (max-width:520px){
+      body{overflow:hidden}
+      .menu-btn{padding:10px}
+      .footer{flex-direction:column;align-items:flex-start}
+      .footer .right{justify-content:flex-start;text-align:left}
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar" aria-label="Top navigation">
+    <a class="brand" href="#" aria-label="Home">
+      <!-- <img src="logo.png" alt="Psychologimata logo" /> -->
+    </a>
+
+    <button class="menu-btn" id="menuBtn" aria-haspopup="dialog" aria-controls="menu" aria-expanded="false">
+      <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="label">Menu</span>
+    </button>
+  </header>
+
+  <main class="stage">
+    <section class="image-window" aria-label="Hero image">
+      <div class="image-track" id="imageTrack">
+        <!-- Replace with your own image. This one is a safe placeholder. -->
+        <img
+          src="yarn.png"
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+      <div class="veil" aria-hidden="true"></div>
+    </section>
+
+    <section class="copy" aria-label="Intro">
+      <div class="copy-inner">
+        <h1 class="title">Psychologimata</h1>
+        <p class="desc">
+             ΥΠΗΡΕΣΙΕΣ <br>
+Ψυχολογική αξιολόγηση <br>
+Ατομική ψυχοθεραπεία & συμβουλευτική <br>
+Συμβουλευτική γονέων
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" aria-label="Social links">
+    <div class="left">
+      <a class="social-icon" href="https://instagram.com/psychologimata" target="_blank" rel="noreferrer" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" fill="currentColor">
+          <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25h-8.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm5.25-2.13a1.13 1.13 0 1 1 0 2.26 1.13 1.13 0 0 1 0-2.26z"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="right">
+      <a class="email-link" href="mailto:hello@yourcompany.com">psychologimata@outlook.com</a>
+    </div>
+  </footer>
+
+  <!-- Fullscreen Menu -->
+  <div class="overlay" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false">
+    <div class="overlay-inner">
+      <nav class="overlay-nav" aria-label="Menu links">
+        <a href="#about" data-close>About</a>
+        <a href="#contact" data-close>Contact</a>
+      </nav>
+
+      <div class="overlay-meta">
+        <span>By appointment only</span>
+        <span><a href="mailto:hello@yourcompany.com" data-close>Email</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sections for anchors (replace with real pages/sections if you want) -->
+  <section id="about" hidden></section>
+  <section id="contact" hidden></section>
+
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const overlay = document.getElementById('menu');
+    const closeLinks = overlay.querySelectorAll('[data-close]');
+
+    // Basic focus trap
+    const focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    let lastFocused = null;
+
+    function openMenu(){
+      lastFocused = document.activeElement;
+      overlay.dataset.open = 'true';
+      menuBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+
+      // Focus first link
+      const first = overlay.querySelector(focusableSelector);
+      first?.focus();
+    }
+
+    function closeMenu(){
+      overlay.dataset.open = 'false';
+      menuBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = 'hidden';
+      lastFocused?.focus();
+    }
+
+    function toggleMenu(){
+      const isOpen = overlay.dataset.open === 'true';
+      isOpen ? closeMenu() : openMenu();
+    }
+
+    menuBtn.addEventListener('click', toggleMenu);
+
+    // Click outside inner area closes
+    overlay.addEventListener('click', (e) => {
+      if(e.target === overlay) closeMenu();
+    });
+
+    // Close on link click
+    closeLinks.forEach(a => a.addEventListener('click', () => closeMenu()));
+
+    // Escape closes
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && overlay.dataset.open === 'true') closeMenu();
+    });
+
+    // Focus trap when open
+    overlay.addEventListener('keydown', (e) => {
+      if(overlay.dataset.open !== 'true') return;
+      if(e.key !== 'Tab') return;
+
+      const focusables = Array.from(overlay.querySelectorAll(focusableSelector))
+        .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+
+      if(!focusables.length) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if(e.shiftKey && document.activeElement === first){
+        e.preventDefault();
+        last.focus();
+      } else if(!e.shiftKey && document.activeElement === last){
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    const track = document.getElementById('imageTrack');
+
+    let imageOffset = 0;
+    let minImageOffset = 0;
+
+    function clamp(value, min, max){
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function setImageOffset(offset){
+      imageOffset = clamp(offset, minImageOffset, 0);
+      track.style.transform = `translate3d(0, ${imageOffset}px, 0)`;
+    }
+
+    function updateImageBounds(){
+      const extraHeight = Math.max(track.offsetHeight - window.innerHeight, 0);
+      minImageOffset = -extraHeight;
+      setImageOffset(imageOffset);
+    }
+
+    window.addEventListener('wheel', (e) => {
+      if(overlay.dataset.open === 'true') return;
+      setImageOffset(imageOffset - e.deltaY);
+    }, { passive:true });
+
+    window.addEventListener('resize', updateImageBounds);
+    updateImageBounds();
+  </script>
+</body>
+</html>
