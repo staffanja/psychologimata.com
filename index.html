@@ -37,7 +37,7 @@
       letter-spacing:.02em;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
-      overflow:hidden; /* keep it like a single “panel” */
+      overflow-x:hidden;
     }
 
     a{color:inherit;text-decoration:none}
@@ -182,48 +182,114 @@
       max-width:56ch;
     }
 
-    /* Bottom links */
-    .footer{
-      position:fixed;
-      inset:auto 0 0 0;
-      z-index:20;
-      padding:var(--pad);
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:16px;
-      pointer-events:none;
+    /* Contact section */
+    .contact{
+      position:relative;
+      z-index:5;
+      padding:clamp(40px, 7vw, 88px) var(--pad);
+      background:linear-gradient(
+        to bottom,
+        rgba(242,242,247,.2) 0%,
+        rgba(242,242,247,.86) 30%,
+        rgba(242,242,247,.98) 100%
+      );
+      color:#4a3426;
     }
-    .footer .left,
-    .footer .right{
-      pointer-events:auto;
+    .contact-wrap{
+      width:min(1040px, 100%);
+      margin:0 auto;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:clamp(24px, 5vw, 70px);
+    }
+    .contact-left,
+    .contact-right{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .contact-left{
+      min-width:min(280px, 100%);
+    }
+    .contact-left h2{
+      margin:0 0 4px;
+      font-family:var(--brand-font);
+      font-weight:500;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      font-size:clamp(20px, 3vw, 30px);
+    }
+    .contact-links{
       display:flex;
       gap:14px;
       flex-wrap:wrap;
       align-items:center;
+    }
+    .contact-note{
+      margin:0;
+      color:rgba(74,52,38,.7);
+      font:500 12px/1.6 var(--mono);
+      letter-spacing:.1em;
+      text-transform:uppercase;
+    }
+    .contact-right{
+      flex:1;
+      min-width:min(420px, 100%);
+    }
+    .contact-form{
+      width:100%;
+      display:grid;
+      gap:12px;
+    }
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .field{
+      display:grid;
+      gap:8px;
+    }
+    .field label{
       font:500 12px/1.2 var(--mono);
       letter-spacing:.12em;
       text-transform:uppercase;
-      color:var(--muted2);
+      color:rgba(74,52,38,.76);
     }
-
-    .footer .right{
-      justify-content:flex-end;
-      text-align:right;
+    .field input,
+    .field textarea{
+      width:100%;
+      border:1px solid rgba(74,52,38,.28);
+      border-radius:14px;
+      background:rgba(255,255,255,.62);
+      color:#3b2a1f;
+      font:500 14px/1.4 var(--font);
+      padding:12px 14px;
+      outline:none;
+    }
+    .field input:focus,
+    .field textarea:focus{
+      border-color:rgba(74,52,38,.55);
+      background:rgba(255,255,255,.9);
+    }
+    .field textarea{
+      resize:vertical;
+      min-height:140px;
     }
     .email-link{
-      color:#fff;
+      color:#3b2a1f;
       font-size:clamp(13px, 1.6vw, 15px);
       letter-spacing:.14em;
-      border:1px solid rgba(255,255,255,.38);
-      background:rgba(0,0,0,.28);
+      border:1px solid rgba(74,52,38,.38);
+      background:rgba(255,255,255,.48);
       border-radius:999px;
       padding:8px 14px;
     }
     .email-link:hover{
       opacity:1;
-      background:rgba(0,0,0,.4);
-      border-color:rgba(255,255,255,.6);
+      background:rgba(255,255,255,.88);
+      border-color:rgba(74,52,38,.6);
     }
     .social-icon{
       display:inline-flex;
@@ -237,6 +303,23 @@
       width:100%;
       height:100%;
       display:block;
+    }
+    .form-submit{
+      margin-top:4px;
+      justify-self:start;
+      border:1px solid rgba(74,52,38,.4);
+      border-radius:999px;
+      background:rgba(255,255,255,.52);
+      color:#3b2a1f;
+      padding:10px 18px;
+      font:600 12px/1 var(--mono);
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .form-submit:hover{
+      background:rgba(255,255,255,.88);
+      border-color:rgba(74,52,38,.6);
     }
 
     /* Fullscreen menu overlay */
@@ -301,10 +384,12 @@
 
     /* Small screens */
     @media (max-width:520px){
-      body{overflow:hidden}
       .menu-btn{padding:10px}
-      .footer{flex-direction:column;align-items:flex-start}
-      .footer .right{justify-content:flex-start;text-align:left}
+      .contact{padding-top:32px}
+      .contact-wrap{flex-direction:column}
+      .contact-right,
+      .contact-left{min-width:100%}
+      .form-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -348,38 +433,72 @@
     </section>
   </main>
 
-  <footer class="footer" aria-label="Social links">
-    <div class="left">
-      <a class="social-icon" href="https://instagram.com/psychologimata" target="_blank" rel="noreferrer" aria-label="Instagram">
-        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" fill="currentColor">
-          <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25h-8.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm5.25-2.13a1.13 1.13 0 1 1 0 2.26 1.13 1.13 0 0 1 0-2.26z"/>
-        </svg>
-      </a>
-    </div>
+  <section class="contact" id="contact" aria-label="Contact form">
+    <div class="contact-wrap">
+      <div class="contact-left">
+        <h2>Επικοινωνία</h2>
+        <div class="contact-links">
+          <a class="social-icon" href="https://instagram.com/psychologimata" target="_blank" rel="noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" fill="currentColor">
+              <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5a4.25 4.25 0 0 0 4.25 4.25h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5a4.25 4.25 0 0 0-4.25-4.25h-8.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm5.25-2.13a1.13 1.13 0 1 1 0 2.26 1.13 1.13 0 0 1 0-2.26z"/>
+            </svg>
+          </a>
+          <a class="email-link" href="mailto:psychologimata@outlook.com">psychologimata@outlook.com</a>
+        </div>
+        <p class="contact-note">Κατόπιν ραντεβού</p>
+      </div>
 
-    <div class="right">
-      <a class="email-link" href="mailto:hello@yourcompany.com">psychologimata@outlook.com</a>
+      <div class="contact-right">
+        <form class="contact-form" action="https://formsubmit.co/psychologimata@outlook.com" method="post">
+          <input type="hidden" name="_subject" value="Νέο μήνυμα από τη φόρμα επικοινωνίας" />
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_template" value="table" />
+          <input type="hidden" name="_next" value="https://psychologimata.com/#contact" />
+          <div class="form-grid">
+            <div class="field">
+              <label for="name">Όνομα</label>
+              <input id="name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" pattern="[^\s@]+@[^\s@]+\.[^\s@]+" />
+            </div>
+            <div class="field">
+              <label for="phone">Τηλέφωνο</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" required />
+            </div>
+            <div class="field">
+              <label for="subject">Θέμα</label>
+              <input id="subject" name="subject" type="text" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="message">Μήνυμα</label>
+            <textarea id="message" name="message" required></textarea>
+          </div>
+          <button class="form-submit" type="submit">Αποστολή</button>
+        </form>
+      </div>
     </div>
-  </footer>
+  </section>
 
   <!-- Fullscreen Menu -->
   <div class="overlay" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false">
     <div class="overlay-inner">
-      <nav class="overlay-nav" aria-label="Menu links">
-        <a href="#about" data-close>About</a>
-        <a href="#contact" data-close>Contact</a>
+      <nav class="overlay-nav" aria-label="Σύνδεσμοι μενού">
+        <a href="#about" data-close>Σχετικά</a>
+        <a href="#contact" data-close>Επικοινωνία</a>
       </nav>
 
       <div class="overlay-meta">
         <span>By appointment only</span>
-        <span><a href="mailto:hello@yourcompany.com" data-close>Email</a></span>
+        <span><a href="mailto:psychologimata@outlook.com" data-close>Email</a></span>
       </div>
     </div>
   </div>
 
   <!-- Sections for anchors (replace with real pages/sections if you want) -->
   <section id="about" hidden></section>
-  <section id="contact" hidden></section>
 
   <script>
     const menuBtn = document.getElementById('menuBtn');
@@ -404,7 +523,7 @@
     function closeMenu(){
       overlay.dataset.open = 'false';
       menuBtn.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = '';
       lastFocused?.focus();
     }
 
@@ -449,6 +568,50 @@
         first.focus();
       }
     });
+
+    const contactForm = document.querySelector('.contact-form');
+
+    function fieldLabel(field){
+      const label = document.querySelector(`label[for="${field.id}"]`);
+      return label ? label.textContent.trim() : 'αυτό το πεδίο';
+    }
+
+    function setGreekValidation(field){
+      field.setCustomValidity('');
+
+      if(field.validity.valueMissing){
+        field.setCustomValidity(`Παρακαλώ συμπληρώστε το πεδίο «${fieldLabel(field)}».`);
+        return;
+      }
+
+      if(field.type === 'email' && (field.validity.typeMismatch || field.validity.patternMismatch)){
+        field.setCustomValidity('Παρακαλώ εισάγετε έγκυρη διεύθυνση email (π.χ. name@example.com).');
+      }
+    }
+
+    if(contactForm){
+      contactForm.addEventListener('invalid', (e) => {
+        const field = e.target;
+        if(!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return;
+        setGreekValidation(field);
+      }, true);
+
+      contactForm.addEventListener('input', (e) => {
+        const field = e.target;
+        if(!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return;
+        field.setCustomValidity('');
+      });
+
+      contactForm.addEventListener('submit', (e) => {
+        const fields = contactForm.querySelectorAll('input, textarea');
+        fields.forEach(setGreekValidation);
+
+        if(!contactForm.checkValidity()){
+          e.preventDefault();
+          contactForm.reportValidity();
+        }
+      });
+    }
 
     const track = document.getElementById('imageTrack');
 
