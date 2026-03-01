@@ -321,14 +321,27 @@
       background:rgba(255,255,255,.88);
       border-color:rgba(74,52,38,.6);
     }
+    .form-submit:disabled{
+      opacity:.62;
+      cursor:wait;
+    }
+    .form-status{
+      margin:0;
+      min-height:1.4em;
+      font:500 13px/1.4 var(--font);
+    }
+    .form-status[data-state="info"]{color:#5d4637}
+    .form-status[data-state="success"]{color:#1f6b36}
+    .form-status[data-state="error"]{color:#a12727}
 
     /* Fullscreen menu overlay */
     .overlay{
       position:fixed;
       inset:0;
       z-index:50;
-      background:rgba(10,10,10,.96);
-      backdrop-filter:blur(6px);
+      background:linear-gradient(to bottom, rgb(219, 166, 121) 0%, rgb(242, 242, 247) 100%);
+      color:#1f1712;
+      backdrop-filter:none;
       display:grid;
       place-items:center;
       opacity:0;
@@ -356,20 +369,25 @@
     .overlay-nav a{
       font-size:clamp(22px, 4vw, 44px);
       font-weight:400;
-      text-transform:uppercase;
-      letter-spacing:.22em;
+      text-transform:none;
+      letter-spacing:.06em;
       padding:10px 0;
+    }
+    .overlay-nav a:focus,
+    .overlay-nav a:focus-visible{
+      outline:none;
+      box-shadow:none;
     }
 
     .overlay-meta{
       margin-top:10px;
-      border-top:1px solid var(--line);
+      border-top:1px solid rgba(74,52,38,.28);
       padding-top:18px;
       display:flex;
       gap:12px;
       justify-content:space-between;
       flex-wrap:wrap;
-      color:var(--muted2);
+      color:rgba(74,52,38,.82);
       font:500 12px/1.4 var(--mono);
       letter-spacing:.12em;
       text-transform:uppercase;
@@ -449,11 +467,7 @@
       </div>
 
       <div class="contact-right">
-        <form class="contact-form" action="https://formsubmit.co/psychologimata@outlook.com" method="post">
-          <input type="hidden" name="_subject" value="Νέο μήνυμα από τη φόρμα επικοινωνίας" />
-          <input type="hidden" name="_captcha" value="false" />
-          <input type="hidden" name="_template" value="table" />
-          <input type="hidden" name="_next" value="https://psychologimata.com/#contact" />
+        <form class="contact-form" action="/api/contact" method="post" novalidate>
           <div class="form-grid">
             <div class="field">
               <label for="name">Όνομα</label>
@@ -477,6 +491,7 @@
             <textarea id="message" name="message" required></textarea>
           </div>
           <button class="form-submit" type="submit">Αποστολή</button>
+          <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
         </form>
       </div>
     </div>
@@ -486,8 +501,8 @@
   <div class="overlay" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false">
     <div class="overlay-inner">
       <nav class="overlay-nav" aria-label="Σύνδεσμοι μενού">
-        <a href="#about" data-close>Σχετικά</a>
-        <a href="#contact" data-close>Επικοινωνία</a>
+        <a href="profile.html">Προφίλ</a>
+        <a href="blog.html">Blog - newsletter</a>
       </nav>
 
       <div class="overlay-meta">
@@ -496,9 +511,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Sections for anchors (replace with real pages/sections if you want) -->
-  <section id="about" hidden></section>
 
   <script>
     const menuBtn = document.getElementById('menuBtn');
@@ -570,6 +582,9 @@
     });
 
     const contactForm = document.querySelector('.contact-form');
+    const formStatus = document.getElementById('formStatus');
+    const submitButton = contactForm?.querySelector('.form-submit');
+    const submitButtonText = submitButton?.textContent || 'Αποστολή';
 
     function fieldLabel(field){
       const label = document.querySelector(`label[for="${field.id}"]`);
@@ -589,6 +604,34 @@
       }
     }
 
+    function resolveContactApiUrl(){
+      const configuredApiUrl = contactForm?.dataset.apiUrl || window.CONTACT_API_URL;
+      if(configuredApiUrl){
+        return configuredApiUrl;
+      }
+
+      const isLocalPage = window.location.protocol === 'file:' ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+      if(isLocalPage){
+        return 'http://localhost:5050/api/contact';
+      }
+      return '/api/contact';
+    }
+
+    function setFormStatus(state, message){
+      if(!formStatus) return;
+      formStatus.dataset.state = state;
+      formStatus.textContent = message;
+    }
+
+    function setSubmittingState(isSubmitting){
+      if(!submitButton) return;
+      submitButton.disabled = isSubmitting;
+      submitButton.textContent = isSubmitting ? 'Αποστολή...' : submitButtonText;
+    }
+
     if(contactForm){
       contactForm.addEventListener('invalid', (e) => {
         const field = e.target;
@@ -600,15 +643,59 @@
         const field = e.target;
         if(!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return;
         field.setCustomValidity('');
+        if(formStatus?.dataset.state === 'error'){
+          setFormStatus('', '');
+        }
       });
 
-      contactForm.addEventListener('submit', (e) => {
+      contactForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
         const fields = contactForm.querySelectorAll('input, textarea');
         fields.forEach(setGreekValidation);
 
         if(!contactForm.checkValidity()){
-          e.preventDefault();
           contactForm.reportValidity();
+          return;
+        }
+
+        setSubmittingState(true);
+        setFormStatus('info', 'Αποστολή μηνύματος...');
+
+        const payload = Object.fromEntries(new FormData(contactForm).entries());
+        const apiUrl = resolveContactApiUrl();
+
+        try{
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          let responseData = null;
+          const contentType = response.headers.get('content-type') || '';
+          if(contentType.includes('application/json')){
+            responseData = await response.json();
+          }
+
+          if(!response.ok){
+            const firstValidationMessage = responseData?.errors
+              ? Object.values(responseData.errors).flat()[0]
+              : null;
+            const fallbackMessage = 'Παρουσιάστηκε σφάλμα κατά την αποστολή. Παρακαλώ δοκιμάστε ξανά.';
+            const errorMessage = firstValidationMessage || responseData?.detail || fallbackMessage;
+            throw new Error(errorMessage);
+          }
+
+          contactForm.reset();
+          setFormStatus('success', responseData?.message || 'Το μήνυμά σας στάλθηκε επιτυχώς.');
+        } catch (error){
+          const message = error instanceof Error
+            ? error.message
+            : 'Παρουσιάστηκε σφάλμα κατά την αποστολή. Παρακαλώ δοκιμάστε ξανά.';
+          setFormStatus('error', message);
+        } finally {
+          setSubmittingState(false);
         }
       });
     }
